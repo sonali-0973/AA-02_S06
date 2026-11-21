@@ -1,7 +1,47 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AA-02 scenario starter</title><link rel="stylesheet" href="assets/styles/main.css"></head>
-<body><main><h1>AA-02 scenario starter</h1><p>Bootstrap only. Implement the assigned scenario before submitting.</p>
-<p id="session"></p><button id="health">Check connection</button><button id="catalogue">Load bootstrap catalogue</button><button id="collection">Try collection TODO</button>
-<p id="status" role="status"></p><pre id="output"></pre>
-<section><h2>Scenario workflow TODO</h2><p>Add catalogue details and collection add/edit/remove controls. Retain the returned collection code; display saved entries and server-calculated results after each mutation. Use your scenario's field names, units and limits.</p></section>
-</main><script type="module" src="scripts/index.js"></script></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Museum group visit planner</title>
+  <link rel="stylesheet" href="assets/styles/main.css">
+</head>
+<body>
+  <header class="top"><div class="top-inner">
+    <div>
+      <h1>Museum group visit planner</h1>
+      <p class="lede">Browse exhibits, pick your stops and set how long your group spends at each.</p>
+    </div>
+    <p class="session">Session <code id="session"></code><span id="mock-badge" class="badge" hidden>Demo data, no server</span></p>
+  </div></header>
+
+  <p id="status" class="status" role="status"></p>
+
+  <main class="layout">
+    <section class="catalogue" aria-labelledby="cat-h">
+      <h2 id="cat-h">Exhibits</h2>
+      <p id="cat-empty" class="empty" hidden>No exhibits loaded yet.</p>
+      <ul id="exhibit-list" class="exhibit-list"></ul>
+      <article id="detail" class="detail" aria-live="polite">
+        <p class="empty">Select an exhibit to see its theme and suggested visit time.</p>
+      </article>
+    </section>
+
+    <section class="plan" aria-labelledby="plan-h">
+      <h2 id="plan-h">Your visit plan</h2>
+      <p class="plan-code">Plan <code id="plan-code">not created yet</code></p>
+      <p id="plan-alert" class="alert" role="alert" hidden></p>
+      <ul id="plan-items" class="plan-items"></ul>
+      <p id="plan-empty" class="empty">No stops yet. Add an exhibit from the list.</p>
+      <p class="total">Total visit time <strong id="plan-total">0 min</strong></p>
+    </section>
+  </main>
+
+  <details class="log">
+    <summary>Request log (for evidence)</summary>
+    <ol id="log"></ol>
+  </details>
+
+  <script type="module" src="scripts/index.js"></script>
+</body>
+</html>
