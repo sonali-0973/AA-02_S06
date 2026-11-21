@@ -6,7 +6,10 @@ group:
   members:
     - student_id: "6704864030"
       name: "Zin Nwe Moe"
-      contribution_summary: ""
+      contribution_summary: "Responsible for implementing the S06 backend functionality using Python and FastAPI.
+       Developed the application service, business logic, and input validation for museum visit plans.
+        Implemented REST API endpoints for retrieving exhibits, creating visit plans, adding exhibits, updating allocated visit times, and deleting exhibits.
+         Integrated PostgreSQL to persist exhibit data, visit plans, and allocated minutes. Ensured session-based access control, parameterized SQL queries, and correct calculation of total visit duration based on allocated minutes."
     - student_id: "6704864006"
       name: "Thura Hein Thant"
       contribution_summary: "TODO: actual contribution"
