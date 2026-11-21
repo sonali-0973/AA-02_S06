@@ -19,9 +19,9 @@ const errorText = e => `${e.message}${e.code && e.code !== 'REQUEST_FAILED' ? ` 
 $('session').textContent = sessionCode;
 $('mock-badge').hidden = !api.isMock;
 
-api.setLogger(({ method, path, body, status, response }) => {
-  const item = el('li', {}, `${method} ${path} → ${status}`);
-  const detail = JSON.stringify({ request: body ?? null, response }, null, 2);
+api.setLogger(({ time, method, path, session, body, status, response }) => {
+  const item = el('li', {}, `${time}  ${method} ${path} → ${status}`);
+  const detail = JSON.stringify({ sessionHeader: session ?? null, requestBody: body ?? null, response }, null, 2);
   item.append(el('pre', {}, detail));
   $('log').prepend(item);
 });

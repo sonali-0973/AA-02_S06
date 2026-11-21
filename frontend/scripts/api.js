@@ -1,52 +1,42 @@
 /**
- * Scenario S06 API wrapper. Field names are normalised in ONE place (the norm* functions)
- * so they can be changed once the group agrees the response shapes.
- * Open the page with ?mock=1 to use in-browser demo data instead of the real backend.
+ * Scenario S06 API wrapper.
+ * Response field names are normalised in ONE place (the norm* functions).
  */
-import { request as realRequest } from './http.js';
-import { mockRequest } from './mock-api.js';
+import { request, setHttpLog } from './http.js';
 
-export const isMock = new URLSearchParams(location.search).has('mock');
-let logger = () => {};
-export const setLogger = fn => { logger = fn; };
+export const isMock = false;
+export const setLogger = setHttpLog;
 
-async function call(path, options = {}) {
-  const transport = isMock ? mockRequest : realRequest;
-  const entry = { method: options.method || 'GET', path: `/api${path}`, body: options.body };
-  try {
-    const response = await transport(path, options);
-    logger({ ...entry, status: 'OK', response });
-    return response;
-  } catch (error) {
-    logger({ ...entry, status: error.status ?? 'ERROR', response: error.payload ?? error.message });
-    throw error;
-  }
-}
+const call = (path, options = {}) => request(path, options);
 
 export const normExhibit = e => ({
-  code: e.exhibitCode,
-  name: e.name ?? e.title ?? e.exhibitCode,
+  code: e.exhibitCode ?? e.exhibit_code ?? e.code,
+  name: e.name ?? e.title ?? e.exhibitCode ?? e.code,
   theme: e.theme ?? '',
-  suggested: e.suggestedMinutes ?? e.suggestedVisitMinutes ?? e.suggestedVisitTime ?? null
+  suggested: e.suggestedMinutes ?? e.suggested_minutes ?? e.suggestedVisitMinutes ?? e.suggestedVisitTime ?? null
 });
 
 const normPlan = p => ({
-  planCode: p.planCode,
-  total: p.totalMinutes ?? p.totalVisitMinutes ?? 0,
-  items: (p.items ?? []).map(i => ({
-    code: i.exhibitCode,
-    allocated: i.allocatedMinutes,
+  planCode: p.planCode ?? p.plan_code ?? p.code,
+  total: p.totalMinutes ?? p.totalVisitMinutes ?? p.total_minutes ?? p.total ?? 0,
+  items: (p.items ?? p.stops ?? p.entries ?? []).map(i => ({
+    code: i.exhibitCode ?? i.exhibit_code ?? i.code,
+    allocated: i.allocatedMinutes ?? i.allocated_minutes,
     exhibit: normExhibit(i.exhibit ?? i)
   }))
 });
 
 export async function listExhibits() {
   const r = await call('/exhibits');
-  return (Array.isArray(r) ? r : r.exhibits ?? []).map(normExhibit);
+  const list = Array.isArray(r) ? r : r.items ?? r.exhibits ?? [];
+  return list.map(normExhibit);
 }
 export const getExhibit = async code => normExhibit(await call(`/exhibits/${encodeURIComponent(code)}`));
 
-export const createPlan = session => call('/visit-plans', { method: 'POST', session });
+export async function createPlan(session) {
+  const r = await call('/visit-plans', { method: 'POST', session });
+  return { planCode: r.planCode ?? r.plan_code ?? r.code };
+}
 export const getPlan = async (planCode, session) => normPlan(await call(`/visit-plans/${planCode}`, { session }));
 export const addItem = (planCode, session, exhibitCode, allocatedMinutes) =>
   call(`/visit-plans/${planCode}/items`, { method: 'POST', session, body: { exhibitCode, allocatedMinutes } });
