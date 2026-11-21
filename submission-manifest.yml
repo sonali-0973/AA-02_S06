@@ -1,0 +1,29 @@
+assessment:
+  id: "additional-assessment-02"
+  title: "Integration, Containerisation, and Testing Readiness Demonstration"
+group:
+  id: "TODO-aa-02"
+  members:
+    - student_id: "6704864030"
+      name: "Zin Nwe Moe"
+      contribution_summary: ""
+    - student_id: "6704864006"
+      name: "Thura Hein Thant"
+      contribution_summary: "TODO: actual contribution"
+    - student_id: "6704864023"
+      name: "Min Khant Zaw"
+      contribution_summary: "TODO: actual contribution"
+project:
+  scenario: "TODO-aa-02-S06-Museum_Group_Visit_planner"
+  frontend_start_command: "docker compose -f config/docker-compose.yml up --build -d"
+  backend_start_command: "docker compose -f config/docker-compose.yml up --build -d"
+  frontend_url: "http://127.0.0.1:8080"
+  backend_base_url: "http://127.0.0.1:8000"
+artefacts:
+  frontend_root: "frontend"
+  backend_root: "backend"
+  database_root: "database"
+  config_root: "config"
+  integration_evidence: "evidence/integration-evidence.md"
+  testing_debugging_evidence: "evidence/testing-debugging-evidence.md"
+  contribution_evidence: "evidence/contribution-evidence.md"

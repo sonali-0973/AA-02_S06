@@ -1,0 +1,3 @@
+# Compatibility entry point; the same portable configuration serves all hosts.
+include:
+  - path: config/docker-compose.yml
