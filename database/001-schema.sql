@@ -17,4 +17,5 @@ CREATE TABLE visit_plan_items (
     allocated_minutes INTEGER NOT NULL CHECK (allocated_minutes BETWEEN 5 AND 60),
     PRIMARY KEY (plan_code, exhibit_code)
 );
--- DELETE removes only a plan item, never an exhibit.
+CREATE INDEX idx_visit_plan_items_exhibit
+ON visit_plan_items(exhibit_code);
