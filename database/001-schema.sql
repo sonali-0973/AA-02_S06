@@ -1,18 +1,20 @@
--- Neutral bootstrap schema: extend/rename fields and constraints for your scenario.
-CREATE TABLE catalogue_items (
+-- S06 Museum group visit planner schema
+CREATE TABLE exhibits (
     code TEXT PRIMARY KEY,
     name TEXT NOT NULL,
-    details JSONB NOT NULL DEFAULT '{}'
+    theme TEXT NOT NULL,
+    suggested_minutes INTEGER NOT NULL CHECK (suggested_minutes > 0)
 );
-CREATE TABLE collections (
+
+CREATE TABLE visit_plans (
     code TEXT PRIMARY KEY,
     session_code TEXT NOT NULL UNIQUE
 );
-CREATE TABLE collection_entries (
-    collection_code TEXT NOT NULL REFERENCES collections(code),
-    item_code TEXT NOT NULL REFERENCES catalogue_items(code),
-    -- TODO: scenario-specific field, strict whole number and inclusive bounds.
-    entry_value INTEGER NOT NULL,
-    PRIMARY KEY (collection_code, item_code)
+
+CREATE TABLE visit_plan_items (
+    plan_code TEXT NOT NULL REFERENCES visit_plans(code),
+    exhibit_code TEXT NOT NULL REFERENCES exhibits(code),
+    allocated_minutes INTEGER NOT NULL CHECK (allocated_minutes BETWEEN 5 AND 60),
+    PRIMARY KEY (plan_code, exhibit_code)
 );
--- Do not assume zero removes an entry; DELETE is separate.
+-- DELETE removes only a plan item, never an exhibit.
