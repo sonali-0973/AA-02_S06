@@ -3,7 +3,7 @@
 
 from app.domain.ports import DataPort, CollectionPort
 from app.domain.scenario import validate_entry, calculate_result
-from app.infrastructure.postgres import PostgresData
+from app.infrastructure.postgres import PostgresData, PostgresCollections
 
 
 class DataAdapter(DataPort):
@@ -169,11 +169,10 @@ class StarterService:
 
 
 def build_service(database_url: str):
-    """Build the catalogue service.
+    data = DataAdapter(PostgresData(database_url))
+    collections = PostgresCollections(database_url)
 
-    The collection adapter will be connected after the database
-    implementation is completed and integrated.
-    """
     return StarterService(
-        DataAdapter(PostgresData(database_url))
+        data=data,
+        collections=collections
     )
