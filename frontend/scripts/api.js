@@ -1,25 +1,13 @@
 /**
  * Scenario S06 API wrapper.
  * Response field names are normalised in ONE place (the norm* functions).
- * If the page shows blanks, compare these names with the real JSON from curl.
  */
-import { request } from './http.js';
+import { request, setHttpLog } from './http.js';
 
 export const isMock = false;
-let logger = () => {};
-export const setLogger = fn => { logger = fn; };
+export const setLogger = setHttpLog;
 
-async function call(path, options = {}) {
-  const entry = { method: options.method || 'GET', path: `/api${path}`, body: options.body };
-  try {
-    const response = await request(path, options);
-    logger({ ...entry, status: 'OK', response });
-    return response;
-  } catch (error) {
-    logger({ ...entry, status: error.status ?? 'ERROR', response: error.payload ?? error.message });
-    throw error;
-  }
-}
+const call = (path, options = {}) => request(path, options);
 
 export const normExhibit = e => ({
   code: e.exhibitCode ?? e.exhibit_code ?? e.code,
