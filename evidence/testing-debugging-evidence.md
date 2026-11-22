@@ -38,7 +38,7 @@ Observed in the browser at http://127.0.0.1:8080:
 File "/backend/app/presentation/api.py", line 53, in get_exhibits
     "items": service.catalogue()
 File "/backend/app/infrastructure/postgres.py", line 33, in catalogue
-    rows = connection.execute("""
+    rows = connection.execute """
 psycopg.errors.UndefinedTable: relation "exhibits" does not exist
 LINE 7:                 FROM exhibits
 ```
