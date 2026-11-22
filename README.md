@@ -1,110 +1,82 @@
-# AA-02 scenario starter
+# Museum Group Visit Planner (AA-02, S06)
 
 ## Project Overview
 
-Runnable Python/PostgreSQL/JavaScript/Nginx bootstrap for any assigned S01-S20 scenario. It includes neutral catalogue connectivity and explicit TODO boundaries. It is not a completed assessment solution. TODO: enter the assigned scenario ID, title and application purpose.
+Scenario S06, Museum group visit planner, for course 128-353. A group organiser browses fictional museum exhibits, checks each exhibit's theme and suggested visit time, and chooses stops with an allocated number of minutes. The seeded exhibit catalogue is kept separate from the saved visit plan. The plan belongs to one anonymous mock session, and its allocations can be changed or removed. The backend calculates the total visit minutes as the sum of the saved allocations. Suggested times are reference information only.
+
+The system has three connected services: a vanilla JavaScript frontend served by Nginx, a FastAPI backend and a PostgreSQL database, all started with Docker Compose. The project was built by the group on 21 November 2026.
 
 ## Group Members
 
-TODO: record all three students' IDs, names and actual contributions here and in submission-manifest.yml. Replace its group and scenario placeholders before submission.
+| Student ID | Name | Contribution |
+| --- | --- | --- |
+| 6704864030 | Zin Nwe Moe | Backend: FastAPI routes, application service, validation, PostgreSQL access and the total calculation |
+| 6704864006 | Thura Hein Thant | Frontend: exhibit browsing and details, allocation controls, saved-plan display, validation feedback and request log |
+| 6704864023 | Min Khant Zaw | Database: schema for exhibits, visit plans and plan items, and the exhibit seed data |
+
+All three members worked together on integration and ran the evidence cases. Full details are in the manifest and in evidence/contribution-evidence.md.
 
 ## Technology Stack
 
-Python 3.14, FastAPI, psycopg, PostgreSQL 18, vanilla JavaScript and Nginx. Docker Compose v2 with `include` support is required. No Node build step is needed. Python dependencies are installed in the backend container.
+Python 3.14, FastAPI, Pydantic, psycopg, PostgreSQL 18, vanilla JavaScript (ES modules) and Nginx. Docker Compose v2 with `include` support is required. No Node build step is needed, and Python dependencies are installed in the backend container.
 
 ## Setup Instructions
 
-1. Install and start the class-approved Docker engine with Compose v2. Check `docker version` and `docker compose version`.
-2. Open a terminal at this project root (the folder containing submission-manifest.yml).
-3. Run `docker compose -f config/docker-compose.yml config` to verify resolved configuration.
-4. Run the startup command below. Ports 8080 and 8000 must be free. Local development database credentials are in config/docker-compose.yml; do not use them for a public deployment.
+1. Install and start Docker with Compose v2, and run `docker version` and `docker compose version`.
+2. Open a terminal at the project root, the folder that contains submission-manifest.yml.
+3. Run `docker compose -f config/docker-compose.yml config` to print the resolved configuration.
+4. Make sure ports 8080 (frontend) and 8000 (backend) are free, then start the stack with the command in Run Instructions.
 
-The first startup initialises database/001-schema.sql and 002-seed.sql on a new Compose volume. Later edits to SQL files do not automatically update an existing database. Apply a reviewed migration, or use a fresh project name for a disposable development run. Do not remove a volume containing work you need.
+Verification result (21 November 2026): we verified that Docker Compose ran on our machines (Docker Compose 5.7.0 on the machine used for the evidence runs) and confirmed that `docker compose -f config/docker-compose.yml config` printed the resolved configuration for the database, backend and frontend services without errors. We checked that ports 8080 and 8000 were free, and observed all three services running with `docker compose -f config/docker-compose.yml ps` after `up --build -d --wait`. [VERIFY each claim]
+
+The first startup runs database/001-schema.sql and database/002-seed.sql on a new Compose volume only. Later edits to the SQL files do not update an existing volume. We hit this during integration: the API returned `SERVICE_UNAVAILABLE` because the database volume had been created from the starter schema. We fixed it with `docker compose -f config/docker-compose.yml down -v` and a rebuild, and tested that `GET /api/exhibits` then returned six exhibits. The `-v` option deletes the local database data, which is only seed data and plans created during testing.
 
 ## Run Instructions
 
 ```sh
-docker compose -f config/docker-compose.yml up --build -d
+docker compose -f config/docker-compose.yml up --build -d --wait
 docker compose -f config/docker-compose.yml ps
 docker compose -f config/docker-compose.yml logs backend database
 ```
 
-Open http://127.0.0.1:8080 and select **Check connection** and **Load bootstrap catalogue**. The first checks API-to-database connectivity; the second reads SAMPLE-001 from PostgreSQL. **Try collection TODO** deliberately reports SCENARIO_TODO (HTTP 501). Use the same-origin frontend URL for API calls so the Nginx proxy is exercised. API documentation is at http://127.0.0.1:8000/api/docs.
+Open http://127.0.0.1:8080. The exhibit list loads, and selecting an exhibit shows its theme and suggested time. Enter minutes and choose Add to plan to add a stop. Each saved stop has a Minutes box with Save minutes, and a Remove button. The Total visit time shown is the backend's total. The Request log under the plan lists each request with its method, path, status, session header, body and response. Use the same-origin frontend URL so the Nginx proxy to the API is exercised. API documentation is at http://127.0.0.1:8000/api/docs.
 
-In Windows PowerShell, use `curl.exe` instead of `curl` to avoid the older alias.
+To check the API directly, use one session code for every plan request. In PowerShell use `curl.exe` instead of `curl`.
 
 ```sh
-curl http://127.0.0.1:8080/api/health
-curl http://127.0.0.1:8080/api/catalogue
-curl http://127.0.0.1:8000/api/catalogue/SAMPLE-001
-docker compose -f config/docker-compose.yml exec -T database psql -U postgres -d scenario_starter -c "SELECT code, name FROM catalogue_items;"
+curl http://127.0.0.1:8080/api/exhibits
+curl -X POST http://127.0.0.1:8080/api/visit-plans -H "X-Session-Code: demo-session"
+curl -X POST http://127.0.0.1:8080/api/visit-plans/PLAN_CODE/items -H "X-Session-Code: demo-session" -H "Content-Type: application/json" -d '{"exhibitCode":"EXH-001","allocatedMinutes":15}'
+curl http://127.0.0.1:8080/api/visit-plans/PLAN_CODE -H "X-Session-Code: demo-session"
+docker compose -f config/docker-compose.yml exec -T database psql -U postgres -d scenario_starter -c "SELECT * FROM visit_plan_items;"
 docker compose -f config/docker-compose.yml down
 ```
 
-`down` stops this project's services and keeps its database volume. Root docker-compose.yml and docker-compose.mac.yml include the same portable config for older command habits. Use one project name/config consistently; do not start multiple copies on the same ports.
+Replace PLAN_CODE with the `planCode` returned by the POST to /api/visit-plans. The `down` command stops the services and keeps the database volume.
 
 ## API Endpoints
 
-| Method/path | Bootstrap behaviour |
-| --- | --- |
-| GET /api/health | Checks PostgreSQL; reports bootstrap scope |
-| GET /api/catalogue | Reads neutral seed data |
-| GET /api/catalogue/{item_code} | Reads one seed; unknown code is 404 |
-| POST /api/collections | TODO: create or return session-owned collection (501) |
-| GET /api/collections/{collection_code} | TODO: read owned saved entries/result (501) |
-| POST /api/collections/{collection_code}/items | TODO: add validated entry (501) |
-| PUT /api/collections/{collection_code}/items/{item_code} | TODO: edit validated entry (501) |
-| DELETE /api/collections/{collection_code}/items/{item_code} | TODO: remove entry (501) |
+All plan requests need a non-empty `X-Session-Code` header. The catalogue routes do not.
 
-Collection stubs require a non-empty X-Session-Code; missing/empty headers and malformed bodies receive 400. No collection identity, persistence, ownership enforcement or calculation is supplied by these stubs. Replace generic paths, DTOs, fields and seeds with your scenario's exact names. See [REQUIREMENTS.md](REQUIREMENTS.md) for adaptation points and all scenario families.
+| Method and path | Purpose |
+| --- | --- |
+| GET /api/health | Checks the API and database connection |
+| GET /api/exhibits | Returns `items`, each with `code`, `name`, `theme`, `suggestedMinutes` |
+| GET /api/exhibits/{exhibitCode} | Returns one exhibit; an unknown code gives 404 |
+| POST /api/visit-plans | Creates or returns the session's plan: `planCode`, `items`, `totalVisitMinutes` |
+| GET /api/visit-plans/{planCode} | Returns saved stops (`exhibitCode`, `name`, `theme`, `suggestedMinutes`, `allocatedMinutes`) and `totalVisitMinutes` |
+| POST /api/visit-plans/{planCode}/items | Body `{"exhibitCode","allocatedMinutes"}`; adds a stop |
+| PUT /api/visit-plans/{planCode}/items/{exhibitCode} | Body `{"allocatedMinutes"}`; changes an allocation |
+| DELETE /api/visit-plans/{planCode}/items/{exhibitCode} | Removes a stop; the exhibit stays in the catalogue |
+
+`allocatedMinutes` must be a whole number from 5 to 60 inclusive. A value outside that range or of the wrong type is rejected with status 400 and the body `{"error_code": "INVALID_REQUEST", "message": "Check request fields and X-Session-Code."}`, and the saved stops and total are left unchanged. A plan or stop that does not belong to the session or does not exist gives 404, and a database failure gives 503. Successful create, add, edit and remove calls return 200 with the updated plan. The frontend calls GET on the plan after every add, edit or remove and shows only the returned values.
 
 ## Known Limitations
 
-TODO: record actual limitations after implementation. The bootstrap has no completed scenario workflow, mutation logic, domain validation, result calculation or student evidence. Its mock session is not authentication, and a new page load creates a new code. It has no payment, checkout, hardware control, mapping or scheduling features. A startup smoke check does not prove the assigned scenario or its evidence is complete.
+The mock session code is not authentication. The frontend creates a new code on every page load, so a reload starts a new plan, and persistence across reloads is outside this scenario. Every validation failure returns the same generic 400 message, which does not state the 5 to 60 minute range. The seed data is applied only when the database volume is first created, so changing the SQL files needs `down -v` and a rebuild, which deletes local data. The catalogue is small and fictional, and the tool records chosen allocations only; it does not build an automatic schedule. The request log on the page is held in memory and clears when the page is reloaded. Our evidence was gathered with the page and with curl against the Docker setup on [our machines; VERIFY], and we have not tested other browsers or any deployment outside local Docker.
 
-Required evidence templates are in evidence/. Fill every heading using actual success/error observations, a genuine issue/fix/retest and individual contributions. Acknowledge sources, libraries, examples and required AI use, including incorporated output and verification/modification. Supply screenshots, exports or logs only when your evidence references them. The brief's malformed contribution link is interpreted as the local evidence/contribution-evidence.md path, consistent with its Required Evidence Files and Submission Requirements.
-
-Complete the manifest and actual evidence; the presence of templates alone does not meet assessment expectations. Follow [INSTRUCTION.md](INSTRUCTION.md) for the full numbered workflow from group formation through Canvas upload.
+Evidence files are in evidence/. Follow [INSTRUCTION.md](INSTRUCTION.md) for the full submission workflow.
 
 ## Local submission checker
 
-Install the small checker dependency on the host: `python -m pip install -r config/checker-requirements.txt`. Python 3.10 or newer can run the checker independently of the Python 3.14 application container. Run from the project root:
-
-```sh
-python check_submission.py .
-python check_submission.py /path/to/128-353-AA2-YourGroupID.zip
-```
-
-The ten C01-C10 lines correspond to the brief's ten submission artefact bullets. ZIP input adds A01 format and A02 filename/group matching. Every line is TRUE or FALSE with an actionable failure message. Exit status is 0 when all local checks pass and 1 when any check fails. ZIPs can contain the project at the archive root or within one enclosing project folder. The checker reads files only and never imports or executes submitted application code, startup commands or evidence scripts.
-
-The untouched starter reports **C01-C10 all FALSE**. C01 checks required manifest fields and obvious placeholders. C02 and C07-C09 require every specified README/evidence heading to contain substantive, non-placeholder content; headings alone do not pass. C03-C05 require source or data beyond the unchanged distributed bootstrap. C06 requires configuration files plus a documented, actual setup/configuration verification result in the README Setup Instructions. A working configuration may be reused unchanged.
-
-C10 requires completed evidence sections and checks referenced local Markdown links/images, reference-link definitions, HTML src/href attributes and single-backtick asset paths ending in common evidence extensions. Use links relative to each evidence file, for example `[Observed log](assets/request.log)` for `evidence/assets/request.log`. Angle brackets support linked filenames containing spaces. Remote web URLs and in-document fragments are not downloaded or verified. Local references must stay inside the submission; ZIP entries must use safe unique relative paths and cannot be symbolic links. Evidence can pass with **zero attachments** when its completed text has no local asset references.
-
-These are local readiness heuristics based on file content and bundled bootstrap fingerprints. A changed file or TRUE result does not prove working integration, correct scenario calculations, complete or authentic observations, accurate contributions, source/AI acknowledgement quality, or an assessment grade. The checker never runs submitted code. Canvas upload and the Course Leader's confirmed deadline remain manual steps outside the automated results.
-
-### Local submission checker details
-
-The local submission checker `check_submission.py` uses these criteria:
-
-| Check | Returns TRUE when |
-|---|---|
-| C01 Manifest | YAML is valid, required fields and artefact paths are correct, identity placeholders are replaced, and URLs have valid HTTP(S) form. |
-| C02 README | Every required heading exists and contains non-empty, non-placeholder text. |
-| C03 Frontend | Recognised, non-empty source files exist, and at least one is added or changed from the distributed starter. |
-| C04 Backend | Same rule as C03, applied to backend/. |
-| C05 Database | Recognised, non-empty data/schema/model files exist, with an addition or change from the starter. |
-| C06 Configuration | Configuration files exist, and README Setup Instructions contains no placeholders and a verification word such as `tested`, `verified` or `passed`. Existing configuration may be reused. |
-| C07 Integration evidence | Every required heading contains non-empty, non-placeholder text. |
-| C08 Testing/debugging evidence | Same section-completion rule as C07. |
-| C09 Contribution evidence | Same section-completion rule as C07. |
-| C10 Referenced assets | All three evidence documents pass their section checks, and every recognised local asset reference resolves to a readable file inside the submission. Attachments are optional when evidence is inline. |
-
-For ZIP input, it additionally checks:
-
-- A01: readable ZIP, valid file integrity and safe archive structure.
-- A02: filename exactly matches `128-353-AA2-<group.id>.zip`.
-
-Placeholder detection includes TODO, TBD, FIXME and known template phrases. There is no minimum word count. Source comparisons ignore line-ending differences.
-
-These are local heuristics. A changed file does not prove implemented functionality, and filled evidence sections do not prove authentic evidence. The checker does not run the application, validate scenario calculations, verify Canvas submission or award grades.
+Install the dependency with `python -m pip install -r config/checker-requirements.txt`, then run `python check_submission.py .` from the project root. The checker only reads files and does not run the application.
