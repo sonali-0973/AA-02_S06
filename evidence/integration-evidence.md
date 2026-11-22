@@ -29,7 +29,7 @@ The same session code, `4c62ede7-951b-46bf-879f-4c1bb9acdb76` in the logged run,
 
 ## Backend API Evidence
 
-From the page's request log on 21 November 2026 (11:39 to 11:40 AM), the API responded as follows:
+General API Request-Log Test Run — From the page's request log on 21 November 2026 (11:39 to 11:40 AM), the API responded as follows:
 
 | Request | Status | Response |
 |---|---|---|
@@ -41,14 +41,16 @@ From the page's request log on 21 November 2026 (11:39 to 11:40 AM), the API res
 | `DELETE .../items/EXH-001` | 200 | plan with empty `items`, `totalVisitMinutes` 0 |
 | `POST .../items` with `allocatedMinutes` below 5 | 400 | `{"error_code": "INVALID_REQUEST", "message": "Check request fields and X-Session-Code."}` |
 
-After each change, the following `GET /api/visit-plans/{planCode}` returned the same saved state as the change's own response. Items include the exhibit's `name`, `theme` and `suggestedMinutes` beside the saved `allocatedMinutes`, and the total is `totalVisitMinutes`. Successful create, add, edit and delete calls all returned 200.
+After each successful change, a subsequent `GET /api/visit-plans/{planCode}` returned the same saved state as the corresponding mutation response. Each plan item included the exhibit's `name`, `theme` and `suggestedMinutes` beside the saved `allocatedMinutes`, and also included the updated `totalVisitMinutes`. The create, add, edit, and delete requests all returned HTTP 200. An allocation below the minimum of 5 minutes was rejected with `HTTP 400` and an `INVALID_REQUEST` response.
 
-The four S06 evidence cases, run with one session code:
+### Separate Test Run: Four S06 Evidence Cases
+
+The following four cases were executed separately using one session code and the values specified in the S06 brief:
 
 | Case | Request | Expected | Observed |
 |---|---|---|---|
 | 1 | Add EXH-001 at 15, EXH-002 at 20, then GET plan | two items, total 35 | Two items with allocations 15 and 20 and `totalVisitMinutes` 35. |
-| 2 | `PUT {"allocatedMinutes":25}` on EXH-001, then GET | EXH-001 at 25, total 45 | EXH-001 at 25 and `totalVisitMinutes 45.  |
+| 2 | `PUT {"allocatedMinutes":25}` on EXH-001, then GET | EXH-001 at 25, total 45 | EXH-001 at 25 and `totalVisitMinutes` 45.  |
 | 3 | `DELETE` EXH-002, then GET | EXH-001 at 25, total 25 | EXH-001 still at 25, `totalVisitMinutes` 25, EXH-002 still in the catalogue. |
 | 4 | `PUT {"allocatedMinutes":4}` on EXH-001, then GET | 4xx, plan unchanged | 400 with the body above; the GET afterwards showed EXH-001 at 25 and total 25. |
 
@@ -76,7 +78,7 @@ On 21 November 2026, with one session code, the page's request log showed this s
 2. `PUT .../items/EXH-001` with `{"allocatedMinutes":10}` returned 200, and the next `GET` showed 10 and a total of 10.
 3. `DELETE .../items/EXH-001` returned 200, and the next `GET` showed no items and a total of 0.
 
-At each step the page showed the same values as the GET response. For the S06 evidence cases with the brief's values (15 and 20, then 25, then removing EXH-002), the totals were 35, 45 and 25. [VERIFY]
+At each step the page showed the same values as the GET response.For the separate S06 evidence test run, adding EXH-001 at 15 minutes and EXH-002 at 20 minutes produced a total of 35 minutes. Updating EXH-001 to 25 minutes produced a total of 45 minutes. Removing EXH-002 left EXH-001 at 25 minutes, with a total of 25 minutes. [VERIFY]
 
 ## Error or Empty-Data Case
 
