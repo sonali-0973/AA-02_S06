@@ -2,7 +2,7 @@ assessment:
   id: "additional-assessment-02"
   title: "Integration, Containerisation, and Testing Readiness Demonstration"
 group:
-  id: "TODO-aa-02"
+  id: "AA-02"
   members:
     - student_id: "6704864030"
       name: "Zin Nwe Moe"
@@ -12,12 +12,12 @@ group:
          Integrated PostgreSQL to persist exhibit data, visit plans, and allocated minutes. Ensured session-based access control, parameterized SQL queries, and correct calculation of total visit duration based on allocated minutes."
     - student_id: "6704864006"
       name: "Thura Hein Thant"
-      contribution_summary: "TODO: actual contribution"
+      contribution_summary: "Frontend: exhibit browsing and detail view, stop selection and allocation controls, and a saved-plan display with server-returned totals and validation feedback. Used an AI assistant to help draft and debug the code."
     - student_id: "6704864023"
       name: "Min Khant Zaw"
-      contribution_summary: "TODO: actual contribution"
+      contribution_summary: "Database: designed the PostgreSQL schema for exhibits, visit plans and plan items, with primary and foreign keys, a CHECK limiting allocated minutes to 5-60 and an index on plan items. Wrote the seed data for six fictional exhibits, including EXH-001 and EXH-002."
 project:
-  scenario: "TODO-aa-02-S06-Museum_Group_Visit_planner"
+  scenario: "S06 Museum group visit planner"
   frontend_start_command: "docker compose -f config/docker-compose.yml up --build -d"
   backend_start_command: "docker compose -f config/docker-compose.yml up --build -d"
   frontend_url: "http://127.0.0.1:8080"
